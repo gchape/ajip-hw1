@@ -1,6 +1,16 @@
+import java.io.*;
+import java.nio.CharBuffer;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.TreeSet;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+
 public class Main {
     public static void main(String[] args) {
-
     }
 
     private static void mergeSort(final int partitions) throws IOException {
@@ -58,8 +68,7 @@ public class Main {
                 var filteredWords =
                         Arrays.stream(new String(buffer.array()).split(" "))
                                 .filter(Predicate.not(String::isBlank))
-                                .map(String::trim)
-                                .toList();
+                                .map(String::trim).toList();
 
                 words.addAll(filteredWords);
 
