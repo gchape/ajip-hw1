@@ -3,6 +3,34 @@ public class Main {
 
     }
 
+    private static void mergeSort(final int partitions) throws IOException {
+        deleteChunkFiles();
+
+        var tempFiles = new ArrayList<Path>();
+        int partitionSize = (int) Files.size(Path.of("resources/sonnets.txt")) / partitions;
+
+        try (var reader = new BufferedReader(new InputStreamReader(new FileInputStream("resources/sonnets.txt")))) {
+            var buffer = CharBuffer.allocate(partitionSize);
+
+            for (int i = 0; reader.read(buffer) != -1; buffer.flip(), i++) {
+                var out =
+                        Arrays.stream(new String(buffer.array()).split(" "))
+                                .sorted(String::compareToIgnoreCase)
+                                .collect(Collectors.joining(" "));
+
+                var temp = Path.of("resources/chunk%d.txt".formatted(i));
+                tempFiles.add(temp);
+
+                Files.createFile(temp);
+                try (var writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(temp.toFile())))) {
+                    writer.write(out);
+                }
+            }
+        }
+
+        merge(tempFiles);
+    }
+
     private static void deleteChunkFiles() {
         try (var files = Files.list(Path.of("resources"))) {
             files.filter(p -> p.toString().contains("chunk")).forEach(path -> {
