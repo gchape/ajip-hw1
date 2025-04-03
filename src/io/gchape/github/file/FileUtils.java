@@ -20,27 +20,27 @@ public class FileUtils {
     public static void sort(final String file, final Comparator<String> comparator) throws IOException {
         deletePartitionFiles();
 
-        var resourcePath = "resources/" + file;
+        var resource = "resources/" + file;
         var partitionPaths = new ArrayList<Path>();
 
-        try (var reader = new BufferedReader(new InputStreamReader(new FileInputStream(resourcePath)))) {
+        try (var reader = new BufferedReader(new InputStreamReader(new FileInputStream(resource)))) {
             var charBuffer = CharBuffer.allocate(8096);
 
-            for (int partitionIndex = 0; reader.read(charBuffer) != -1; charBuffer.flip(), partitionIndex++) {
-                var sortedText =
+            for (int i = 0; reader.read(charBuffer) != -1; charBuffer.flip(), i++) {
+                var partitionContent =
                         Arrays.stream(new String(charBuffer.array()).split("[ ,.:]"))
                                 .filter(Predicate.not(String::isBlank))
                                 .map(String::trim)
                                 .sorted(comparator)
                                 .collect(Collectors.joining(" "));
 
-                var partitionPath = Path.of("resources/partition%d.txt".formatted(partitionIndex));
+                var partitionPath = Path.of("resources/partition%d.txt".formatted(i));
                 partitionPaths.add(partitionPath);
 
                 Files.deleteIfExists(partitionPath);
                 Files.createFile(partitionPath);
                 try (var writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(partitionPath.toFile())))) {
-                    writer.write(sortedText);
+                    writer.write(partitionContent);
                 }
             }
         }
@@ -49,9 +49,7 @@ public class FileUtils {
     }
 
     /**
-     * Deletes any existing chunk files from previous runs to avoid conflicts with new runs.
-     * This method scans the "resources/" directory and deletes all files that contain
-     * the word "partition" in their name.
+     * Deletes any existing partition files from previous runs to avoid conflicts with new runs.
      */
     private static void deletePartitionFiles() {
         var resourceDir = new File("resources/");
@@ -64,9 +62,7 @@ public class FileUtils {
     }
 
     /**
-     * Merges the sorted chunk files into one final sorted file.
-     * <p>
-     * This method uses a priority queue to merge the sorted partitions into one final sorted output file.
+     * Merges the sorted partitions into one final sorted file.
      *
      * @param partitionPaths A list of paths to the sorted chunk files.
      * @param comparator     A comparator used to compare the words during the merge.
@@ -80,11 +76,11 @@ public class FileUtils {
             try (var reader = new BufferedReader(new InputStreamReader(new FileInputStream(partitionPath.toFile())))) {
                 reader.read(charBuffer);
 
-                var partition = new StringBuilder();
+                var partitionContent = new StringBuilder();
                 for (String word : new String(charBuffer.array()).split(" ")) {
-                    partition.append(word).append(" ");
+                    partitionContent.append(word).append(" ");
                 }
-                partitions.add(partition);
+                partitions.add(partitionContent);
 
                 charBuffer.flip();
             }
